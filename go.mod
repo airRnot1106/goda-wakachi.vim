@@ -3,6 +3,7 @@ module github.com/airRnot1106/goda-wakachi.vim
 go 1.26
 
 require (
+	github.com/Shougo/goda.vim v0.9.0
 	github.com/ikawaha/kagome-dict/ipa v1.2.6
 	github.com/ikawaha/kagome/v2 v2.11.1
 )
