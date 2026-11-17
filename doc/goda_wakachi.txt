@@ -1,0 +1,127 @@
+*goda_wakachi.txt*	Move by Japanese bunsetsu on goda.vim
+
+==============================================================================
+INTRODUCTION							*goda-wakachi*
+
+goda-wakachi.vim moves the cursor by bunsetsu in Japanese text, where the
+native |w| jumps over a whole run of kanji or kana. It splits each line with
+kagome, a morphological analyzer, and runs on goda.vim.
+
+The binary embeds the IPA dictionary. No other command or dictionary file is
+needed.
+
+==============================================================================
+INSTALL							*goda-wakachi-install*
+
+goda-wakachi.vim needs goda.vim, Vim 9.1 with |+job| and |+channel| or Neovim
+0.11, and either Nix or Go 1.26 to build the binary. Windows is not supported.
+
+With vim-plug:
+>
+	Plug 'Shougo/goda.vim'
+	Plug 'airRnot1106/goda-wakachi.vim', { 'do': 'nix build' }
+<
+Without Nix, run this in the plugin directory. The binary lands at
+bin/goda-wakachi.
+>
+	go build -o bin/goda-wakachi .
+<
+The binary is looked up in this order: |g:goda_wakachi#binary|,
+bin/goda-wakachi and result/bin/goda-wakachi in the plugin directory.
+
+==============================================================================
+MAPPINGS						*goda-wakachi-mappings*
+
+The plugin defines no key mappings. The mappings below exist in Normal, Visual
+and Operator-pending mode, and take a count.
+>
+	nmap w <Plug>(goda-wakachi-w)
+	nmap b <Plug>(goda-wakachi-b)
+	nmap e <Plug>(goda-wakachi-e)
+	nmap ge <Plug>(goda-wakachi-ge)
+	xmap w <Plug>(goda-wakachi-w)
+	xmap b <Plug>(goda-wakachi-b)
+	xmap e <Plug>(goda-wakachi-e)
+	xmap ge <Plug>(goda-wakachi-ge)
+	omap w <Plug>(goda-wakachi-w)
+	omap b <Plug>(goda-wakachi-b)
+	omap e <Plug>(goda-wakachi-e)
+	omap ge <Plug>(goda-wakachi-ge)
+<
+						*<Plug>(goda-wakachi-w)*
+<Plug>(goda-wakachi-w)
+	Move forward to the start of a bunsetsu. |exclusive| motion.
+
+	After an operator, a motion that would leave the line ends at the end
+	of the line. "dw" on the last bunsetsu of a line keeps the next line.
+
+						*<Plug>(goda-wakachi-b)*
+<Plug>(goda-wakachi-b)
+	Move backward to the start of a bunsetsu. |exclusive| motion.
+
+						*<Plug>(goda-wakachi-e)*
+<Plug>(goda-wakachi-e)
+	Move forward to the end of a bunsetsu. |inclusive| motion.
+
+						*<Plug>(goda-wakachi-ge)*
+<Plug>(goda-wakachi-ge)
+	Move backward to the end of a bunsetsu. |inclusive| motion.
+
+On a line that is not empty and has only ASCII characters, the mappings run
+the native |w|, |b|, |e| and |ge|.
+
+"w", "b" and "ge" stop on an empty line. "e" skips it.
+
+==============================================================================
+FUNCTIONS						*goda-wakachi-functions*
+
+							*goda_wakachi#move()*
+goda_wakachi#move({motion})
+	Move the cursor |v:count1| times. {motion} is "w", "b", "e" or "ge".
+	The mappings call this function.
+
+							*goda_wakachi#segment()*
+goda_wakachi#segment({text} [, {unit}])
+	Split {text} and return a list of [start, last] pairs. start is the
+	byte offset of the first character of a segment, and last is the byte
+	offset of its last character. Both count from 0. Whitespace belongs to
+	no segment.
+
+	{unit} is "bunsetsu" or "morpheme". The default is
+	|g:goda_wakachi#unit|.
+>
+	:echo goda_wakachi#segment('私は学校に行く')
+	[[0, 3], [6, 12], [15, 18]]
+<
+==============================================================================
+VARIABLES						*goda-wakachi-variables*
+
+							*g:goda_wakachi#binary*
+g:goda_wakachi#binary
+	Path of the binary. Unset by default.
+
+							*g:goda_wakachi#unit*
+g:goda_wakachi#unit
+	What one motion step covers.
+
+	"bunsetsu"	私は 学校に 行きました。
+	"morpheme"	私 は 学校 に 行き まし た 。
+
+	Default: 'bunsetsu'
+
+==============================================================================
+LIMITS							*goda-wakachi-limits*
+
+The plugin builds a bunsetsu from the part of speech of each token. It does
+not parse the sentence.
+
+- Nouns next to each other always make one bunsetsu. 今日学校に stays
+  together, although 今日 and 学校に are two bunsetsu.
+- A dependent noun joins the word before it. 食べたい物を is one bunsetsu.
+- The dictionary decides the tokens. A word that it does not know may split
+  in the wrong place.
+- "cw" changes the same text as "dw" deletes, the space after the bunsetsu
+  included. The native |cw| stops before the space.
+
+==============================================================================
+vim:tw=78:ts=8:noet:ft=help:norl:
