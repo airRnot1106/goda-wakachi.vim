@@ -2,15 +2,16 @@
   description = "Japanese word motions for Vim and Neovim on goda.vim";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    goda-vim = {
-      url = "github:Shougo/goda.vim/v0.9.0";
-      flake = false;
-    };
+    flake-utils.url = "github:numtide/flake-utils";
     git-hooks = {
       url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    goda-vim = {
+      url = "github:Shougo/goda.vim/v0.9.0";
+      flake = false;
+    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,22 +21,18 @@
   outputs =
     {
       self,
-      nixpkgs,
-      goda-vim,
+      flake-utils,
       git-hooks,
+      goda-vim,
+      nixpkgs,
       treefmt-nix,
     }:
-    let
-      systems = [
-        "aarch64-darwin"
-        "x86_64-darwin"
-        "aarch64-linux"
-        "x86_64-linux"
-      ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
-      version = "0.1.0";
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        version = "0.1.0";
 
-      mkPackages = pkgs: rec {
         goda-wakachi = pkgs.buildGo126Module {
           pname = "goda-wakachi";
           inherit version;
@@ -73,78 +70,70 @@
           '';
         };
 
-        default = vim-plugin;
-      };
-
-      mkFormatter =
-        pkgs:
-        treefmt-nix.lib.mkWrapper pkgs {
+        formatter = treefmt-nix.lib.mkWrapper pkgs {
           projectRootFile = "flake.nix";
           programs = {
             gofumpt.enable = true;
+            nixfmt.enable = true;
             stylua.enable = true;
           };
         };
 
-      # golangci-lint needs the Go modules, which the sandbox of a flake check
-      # cannot download, so the hooks run on commit only and the checks below
-      # run the same tools.
-      mkHooks =
-        pkgs:
-        git-hooks.lib.${pkgs.stdenv.hostPlatform.system}.run {
+        # golangci-lint needs the Go modules, which the sandbox of a flake check
+        # cannot download, so the hooks run on commit only and the checks below
+        # run the same tools.
+        hooks = git-hooks.lib.${system}.run {
           src = ./.;
           hooks = {
-            treefmt = {
-              enable = true;
-              package = mkFormatter pkgs;
-            };
             golangci-lint = {
               enable = true;
               extraPackages = [ pkgs.go_1_26 ];
             };
             selene.enable = true;
+            treefmt = {
+              enable = true;
+              package = formatter;
+            };
           };
         };
-    in
-    {
-      formatter = forAllSystems mkFormatter;
 
-      packages = forAllSystems (
-        pkgs:
-        let
-          built = mkPackages pkgs;
-        in
-        {
-          inherit (built)
-            goda-wakachi
-            vim-plugin
-            default
-            ;
-          goda-vim = built.goda-vim-plugin;
-        }
-      );
+        goTest =
+          name: command:
+          goda-wakachi.overrideAttrs {
+            pname = "goda-wakachi-${name}";
+            doCheck = true;
+            checkPhase = ''
+              runHook preCheck
+              ${command}
+              runHook postCheck
+            '';
+            installPhase = "touch $out";
+            postInstall = "";
+          };
+      in
+      {
+        inherit formatter;
 
-      checks = forAllSystems (
-        pkgs:
-        let
-          built = mkPackages pkgs;
-          goTest =
-            name: command:
-            built.goda-wakachi.overrideAttrs {
-              pname = "goda-wakachi-${name}";
-              doCheck = true;
-              checkPhase = ''
-                runHook preCheck
-                ${command}
-                runHook postCheck
-              '';
-              installPhase = "touch $out";
-              postInstall = "";
-            };
-        in
-        {
-          unit = goTest "unit" "go test ./internal/...";
-          format = pkgs.runCommand "goda-wakachi-format" { nativeBuildInputs = [ (mkFormatter pkgs) ]; } ''
+        packages = {
+          default = vim-plugin;
+          goda-vim = goda-vim-plugin;
+          inherit goda-wakachi vim-plugin;
+        };
+
+        checks = {
+          e2e = goTest "e2e" ''
+            export HOME=$TMPDIR
+            export PATH=${
+              pkgs.lib.makeBinPath [
+                pkgs.neovim
+                pkgs.vim
+              ]
+            }:$PATH
+            export GODA_WAKACHI_E2E_GODA=${goda-vim}
+            export GODA_WAKACHI_E2E_STRICT=1
+            go test -v -count=1 ./e2e
+          '';
+          format = pkgs.runCommand "goda-wakachi-format" { nativeBuildInputs = [ formatter ]; } ''
             cp -r ${./.} source
             chmod -R +w source
             cd source
@@ -164,33 +153,20 @@
             selene .
             touch $out
           '';
-          e2e = goTest "e2e" ''
-            export HOME=$TMPDIR
-            export PATH=${
-              pkgs.lib.makeBinPath [
-                pkgs.vim
-                pkgs.neovim
-              ]
-            }:$PATH
-            export GODA_WAKACHI_E2E_GODA=${goda-vim}
-            export GODA_WAKACHI_E2E_STRICT=1
-            go test -v -count=1 ./e2e
-          '';
-        }
-      );
+          unit = goTest "unit" "go test ./internal/...";
+        };
 
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          inherit (mkHooks pkgs) shellHook;
+        devShells.default = pkgs.mkShell {
+          inherit (hooks) shellHook;
           packages = [
-            (mkFormatter pkgs)
+            formatter
             pkgs.go_1_26
             pkgs.golangci-lint
+            pkgs.neovim
             pkgs.selene
             pkgs.vim
-            pkgs.neovim
           ];
         };
-      });
-    };
+      }
+    );
 }
