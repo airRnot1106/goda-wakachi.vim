@@ -70,6 +70,28 @@
           '';
         };
 
+        # Only goda.vim and this plugin are loaded, with the motions on the
+        # native keys.
+        vimrc = pkgs.writeText "goda-wakachi-vimrc" ''
+          set nocompatible encoding=utf-8
+          set runtimepath^=${vim-plugin},${goda-vim-plugin}
+          for s:key in ['w', 'b', 'e', 'ge']
+            for s:map in ['nmap', 'xmap', 'omap']
+              execute s:map s:key '<Plug>(goda-wakachi-' . s:key . ')'
+            endfor
+          endfor
+        '';
+
+        mkEditor =
+          editor: package:
+          pkgs.writeShellApplication {
+            name = "goda-wakachi-${editor}";
+            runtimeInputs = [ package ];
+            text = ''
+              exec ${editor} -u ${vimrc} -i NONE "$@"
+            '';
+          };
+
         formatter = treefmt-nix.lib.mkWrapper pkgs {
           projectRootFile = "flake.nix";
           programs = {
@@ -113,6 +135,12 @@
       in
       {
         inherit formatter;
+
+        apps = rec {
+          default = nvim;
+          nvim = flake-utils.lib.mkApp { drv = mkEditor "nvim" pkgs.neovim; };
+          vim = flake-utils.lib.mkApp { drv = mkEditor "vim" pkgs.vim; };
+        };
 
         packages = {
           default = vim-plugin;

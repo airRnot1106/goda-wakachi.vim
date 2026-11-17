@@ -20,6 +20,17 @@ Japanese has no spaces between words, so the native `w` jumps over a whole run o
 
 Windows is not supported.
 
+## Try it
+
+With Nix, this opens an editor that loads only goda.vim and this plugin, with the motions on `w`, `b`, `e` and `ge`:
+
+```sh
+nix run github:airRnot1106/goda-wakachi.vim -- file.txt       # Neovim
+nix run github:airRnot1106/goda-wakachi.vim#vim -- file.txt   # Vim
+```
+
+Inside a clone, `nix run . -- file.txt` does the same.
+
 ## Installation
 
 ### Using a plugin manager
