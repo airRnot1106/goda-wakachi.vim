@@ -14,7 +14,9 @@ import (
 type Unit string
 
 const (
+	// Bunsetsu is a phrase: a content word with the particles after it.
 	Bunsetsu Unit = "bunsetsu"
+	// Morpheme is one token of the dictionary.
 	Morpheme Unit = "morpheme"
 )
 
@@ -95,7 +97,10 @@ func roleOf(tok tokenizer.Token, prev pos) role {
 	if r, ok := roles[p]; ok {
 		return r
 	}
-	return roles[pos{p.major, anyMinor}]
+	if r, ok := roles[pos{p.major, anyMinor}]; ok {
+		return r
+	}
+	return head
 }
 
 // placed is a token with the role it took.

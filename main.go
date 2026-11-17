@@ -1,3 +1,4 @@
+// Command goda-wakachi serves the wakachi plugin to goda.vim.
 package main
 
 import (
