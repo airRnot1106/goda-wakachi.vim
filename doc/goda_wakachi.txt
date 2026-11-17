@@ -7,8 +7,8 @@ goda-wakachi.vim moves the cursor by bunsetsu in Japanese text, where the
 native |w| jumps over a whole run of kanji or kana. It splits each line with
 kagome, a morphological analyzer, and runs on goda.vim.
 
-The binary embeds the IPA dictionary. No other command or dictionary file is
-needed.
+The binary embeds the IPA dictionary. The plugin needs no other command or
+dictionary file.
 
 ==============================================================================
 INSTALL							*goda-wakachi-install*
@@ -21,12 +21,12 @@ With vim-plug:
 	Plug 'Shougo/goda.vim'
 	Plug 'airRnot1106/goda-wakachi.vim', { 'do': 'nix build' }
 <
-Without Nix, run this in the plugin directory. The binary lands at
+Without Nix, run this in the plugin directory. Go writes the binary to
 bin/goda-wakachi.
 >
 	go build -o bin/goda-wakachi .
 <
-The binary is looked up in this order: |g:goda_wakachi#binary|,
+The plugin looks for the binary in this order: |g:goda_wakachi#binary|,
 bin/goda-wakachi and result/bin/goda-wakachi in the plugin directory.
 
 ==============================================================================
@@ -115,13 +115,13 @@ LIMITS							*goda-wakachi-limits*
 The plugin builds a bunsetsu from the part of speech of each token. It does
 not parse the sentence.
 
-- Nouns next to each other always make one bunsetsu. 今日学校に stays
+- Nouns next to each other make one bunsetsu. 今日学校に stays
   together, although 今日 and 学校に are two bunsetsu.
 - A dependent noun joins the word before it. 食べたい物を is one bunsetsu.
-- The dictionary decides the tokens. A word that it does not know may split
-  in the wrong place.
-- "cw" changes the same text as "dw" deletes, the space after the bunsetsu
-  included. The native |cw| stops before the space.
+- The tokens come from the dictionary. The plugin may split a word that the
+  dictionary does not have in the wrong place.
+- "cw" changes the text that "dw" deletes, and that text includes the space
+  after the bunsetsu. The native |cw| stops before the space.
 
 ==============================================================================
 vim:tw=78:ts=8:noet:ft=help:norl:
