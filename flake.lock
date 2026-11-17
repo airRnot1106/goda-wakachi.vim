@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "goda-vim": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794540382,
+        "narHash": "sha256-Xbs8XLiiWG9tLuF42jxSob8fw34PEQhZ9QdMCSs+Dsk=",
+        "owner": "Shougo",
+        "repo": "goda.vim",
+        "rev": "3596da14b0539fea957e3eed792a2315ca6b58bd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Shougo",
+        "ref": "v0.9.0",
+        "repo": "goda.vim",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793826729,
@@ -18,6 +35,7 @@
     },
     "root": {
       "inputs": {
+        "goda-vim": "goda-vim",
         "nixpkgs": "nixpkgs"
       }
     }
