@@ -24,7 +24,7 @@ Every target also fails with `did not return within 5s` when one call of `Segmen
 
 ## Coverage record
 
-Sync commit: `b4bdadd`
+Sync commit: `4f6af65`
 
 At the sync commit the check describes this code:
 
