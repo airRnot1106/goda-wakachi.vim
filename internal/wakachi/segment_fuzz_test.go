@@ -89,6 +89,7 @@ func fuzzCursorContract(f *testing.F, holds cursorContract) {
 	f.Add("今日は、晴れです。", []byte{9, 1, 8, 43, 10, 11})
 	f.Add("「猫」と言った", []byte{18, 14, 19, 20, 21})
 	f.Add("Vim で 編集する", []byte{34, 43, 25, 44, 10, 11, 45})
+	f.Add("Vim\u3000-学校", []byte{34, 44, 37, 2})
 	f.Add("", []byte{})
 	f.Fuzz(func(t *testing.T, raw string, picks []byte) {
 		for _, text := range validUTF8Lines(raw, picks) {

@@ -51,6 +51,7 @@ type motionCase struct {
 var motionCases = []motionCase{
 	{Name: "w moves to the next bunsetsu", Lines: prose, Cursor: [2]int{1, 1}, Keys: "w", WantCursor: [2]int{1, 7}},
 	{Name: "w takes a count", Lines: prose, Cursor: [2]int{1, 1}, Keys: "2w", WantCursor: [2]int{1, 16}},
+	{Name: "w skips a full-width space before a symbol", Lines: []string{"私は", "\u3000-学校"}, Cursor: [2]int{1, 1}, Keys: "w", WantCursor: [2]int{2, 4}},
 	{Name: "w stops on an empty line", Lines: prose, Cursor: [2]int{1, 16}, Keys: "w", WantCursor: [2]int{2, 1}},
 	{Name: "w leaves an empty line", Lines: prose, Cursor: [2]int{2, 1}, Keys: "w", WantCursor: [2]int{3, 1}},
 	{Name: "w stops at the end of the buffer", Lines: prose, Cursor: [2]int{3, 13}, Keys: "w", WantCursor: [2]int{3, 25}},

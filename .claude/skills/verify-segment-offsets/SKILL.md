@@ -67,13 +67,9 @@ Logs go to `artifacts/verify-segment-offsets/<target>.log` and failing inputs to
 
 ## Open findings
 
-**F1. A full-width space next to a symbol ends up inside a segment.** `FuzzSegmentWithoutWhitespace` fails on the current code. kagome returns `　-` (U+3000, then a hyphen) as one unknown-word token, and `Segment` only drops a token that is whitespace as a whole. In `　-学校` the first bunsetsu starts on the full-width space. The check found it in under two seconds. The product code is unchanged, because fixing it was not part of this work.
+None. `check.sh` prints four `PASS` lines and exits with code 0.
 
-The `verify-goda-wakachi` skill shows it in Vim 9.2 and Neovim 0.12.6. With the lines `私は` and `　-学校`, `w` at `[1, 1]` lands on `[2, 1]`, the space. The word starts at `[2, 4]`, the hyphen. With the line `私は　-学校`, `dw` at the start leaves `　-学校`, and the space stays.
-
-Until F1 is fixed, expect exactly this from `check.sh`: three `PASS`, and `FAIL FuzzSegmentWithoutWhitespace` on a line that has `\u3000` beside another symbol. The exit code is 1.
-
-A failure of another target is new. So is `FuzzSegmentWithoutWhitespace` failing on a line with no `\u3000`.
+One finding is closed. kagome returns a full-width space and the symbol after it as one token, and `Segment` kept the space inside a segment, so `w` stopped on the space. `Segment` now finds the words inside each token. The seed `Vim\u3000-学校` in the test file and the case `w skips a full-width space before a symbol` in `e2e/e2e_test.go` guard it.
 
 ## A real bug or a wrong check
 

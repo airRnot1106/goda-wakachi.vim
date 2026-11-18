@@ -36,6 +36,7 @@ func TestSegment(t *testing.T) {
 		{"a compound noun is one bunsetsu", "東京大学に行く", Bunsetsu, []string{"東京大学に", "行く"}},
 		{"する joins the noun before it", "日本語を勉強する", Bunsetsu, []string{"日本語を", "勉強する"}},
 		{"whitespace belongs to no bunsetsu", "Vim で 編集する", Bunsetsu, []string{"Vim", "で", "編集する"}},
+		{"whitespace inside a token belongs to no bunsetsu", "私は\u3000-学校", Bunsetsu, []string{"私は", "-学校"}},
 		{"an empty line has no bunsetsu", "", Bunsetsu, []string{}},
 		{"a morpheme is one word", "私は学校に行く", Morpheme, []string{"私", "は", "学校", "に", "行く"}},
 	}

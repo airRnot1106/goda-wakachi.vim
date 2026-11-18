@@ -2,8 +2,8 @@ package wakachi
 
 import (
 	"fmt"
-	"strings"
 	"sync"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/ikawaha/kagome-dict/ipa"
@@ -134,27 +134,47 @@ func (s *Segmenter) Segment(text string, unit Unit) ([]Segment, error) {
 	}
 
 	segments := []Segment{}
-	// The token before the current one, or nil at the start of a run of text.
+	// The word before the current one, or nil at the start of a run of text.
 	var prev *placed
 	for _, tok := range t.Tokenize(text) {
-		if strings.TrimSpace(tok.Surface) == "" {
-			prev = nil
-			continue
-		}
-		_, size := utf8.DecodeLastRuneInString(tok.Surface)
-		last := tok.Position + len(tok.Surface) - size
+		// kagome can return whitespace and the characters beside it as one
+		// token, a full-width space with a hyphen for example, so the words
+		// of a token are found here and not taken from its boundaries.
+		from := -1
+		place := func(to int) {
+			word := tok.Surface[from:to]
+			_, size := utf8.DecodeLastRuneInString(word)
+			start := tok.Position + from
+			last := tok.Position + to - size
+			from = -1
 
-		var before pos
-		if prev != nil {
-			before = prev.pos
+			var before pos
+			if prev != nil {
+				before = prev.pos
+			}
+			r := roleOf(tok, before)
+			if unit == Bunsetsu && prev != nil && (r == tail || prev.role == prefix) {
+				segments[len(segments)-1].Last = last
+			} else {
+				segments = append(segments, Segment{Start: start, Last: last})
+			}
+			prev = &placed{posOf(tok), r}
 		}
-		r := roleOf(tok, before)
-		if unit == Bunsetsu && prev != nil && (r == tail || prev.role == prefix) {
-			segments[len(segments)-1].Last = last
-		} else {
-			segments = append(segments, Segment{Start: tok.Position, Last: last})
+		for at, r := range tok.Surface {
+			if !unicode.IsSpace(r) {
+				if from < 0 {
+					from = at
+				}
+				continue
+			}
+			if from >= 0 {
+				place(at)
+			}
+			prev = nil
 		}
-		prev = &placed{posOf(tok), r}
+		if from >= 0 {
+			place(len(tok.Surface))
+		}
 	}
 	return segments, nil
 }

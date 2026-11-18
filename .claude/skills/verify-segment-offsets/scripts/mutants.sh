@@ -55,13 +55,13 @@ mutant() {
 
 mutant OnCharacters 'in the middle of a character\|outside the line' \
   'Last points after the last character' \
-  's/last := tok.Position + len(tok.Surface) - size/last := tok.Position + len(tok.Surface) + size - size/'
+  's/last := tok.Position + to - size/last := tok.Position + to + size - size/'
 mutant InOrder 'starts before byte' \
   'a joining token opens a second segment over the first' \
   's/segments\[len(segments)-1\].Last = last/segments = append(segments, Segment{Start: segments[len(segments)-1].Start, Last: last})/'
 mutant WithoutWhitespace 'holds whitespace at byte' \
-  'a whitespace token is treated as a word' \
-  's/if strings.TrimSpace(tok.Surface) == "" {/if strings.TrimSpace(tok.Surface) == "\\x00" {/'
+  'an ASCII space is treated as part of a word' \
+  's/if !unicode.IsSpace(r) {/if !unicode.IsSpace(r) || r == 32 {/'
 mutant CoversText 'in no segment' \
   'a joining token does not extend its segment' \
   's/segments\[len(segments)-1\].Last = last/_ = last/'
