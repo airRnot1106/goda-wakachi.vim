@@ -65,7 +65,7 @@ jobs:
       # A push with GITHUB_TOKEN starts no workflow run, so CI would not see the new commit.
       - if: steps.stale.outputs.modules
         id: app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@v3.3.0
         with:
           client-id: ${{ vars.CI_BOT_CLIENT_ID }}
           private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
