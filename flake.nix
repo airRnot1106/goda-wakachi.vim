@@ -37,7 +37,7 @@
           pname = "goda-wakachi";
           inherit version;
           src = ./.;
-          vendorHash = "sha256-o5Yg4RNN7R98kJsZ4fOY56Q020SPiEZEcKNFi1f+Kig=";
+          vendorHash = "sha256-3G6hwSgzzBxkyjR4NWlGtsgjfpLSl5hi5PKv65/aBLA=";
           subPackages = [ "." ];
           doCheck = false;
           postInstall = ''
