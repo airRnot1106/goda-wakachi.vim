@@ -1,0 +1,97 @@
+name: Dependabot sync go.mod
+
+on: pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE: goda-wakachi
+
+jobs:
+  sync:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+      - id: stale
+        shell: bash
+        run: |
+          modules=()
+          while IFS=$'\t' read -r module version; do
+            grep -qF "$module " go.mod || continue
+            if [[ $version == v* ]]; then
+              pinned=$version
+            else
+              pinned="v[^ ]*-${version:0:12}"
+            fi
+            grep -qE "$module $pinned( |\$)" go.mod || modules+=("$module@$version")
+          done < <(jq -r '
+            .nodes as $nodes
+            | $nodes.root.inputs[]
+            | strings
+            | $nodes[.]
+            | select(.locked.type == "github")
+            | ["github.com/\(.locked.owner)/\(.locked.repo)",
+               ((.original.ref // "" | select(test("^v[0-9]"))) // .locked.rev)]
+            | @tsv
+          ' flake.lock)
+          echo "modules=${modules[*]}" >>"$GITHUB_OUTPUT"
+      - if: steps.stale.outputs.modules
+        uses: nixbuild/nix-quick-install-action@v35
+      - if: steps.stale.outputs.modules
+        uses: nix-community/cache-nix-action@v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          save: false
+      - if: steps.stale.outputs.modules
+        shell: bash
+        run: |
+          read -ra modules <<<"$MODULES"
+          nix shell --inputs-from . nixpkgs#go_1_26 -c go get "${modules[@]}"
+          nix shell --inputs-from . nixpkgs#go_1_26 -c go mod tidy
+          nix run --inputs-from . nixpkgs#nix-update -- --flake "$PACKAGE" --version=skip
+        env:
+          MODULES: ${{ steps.stale.outputs.modules }}
+      # A push with GITHUB_TOKEN starts no workflow run, so CI would not see the new commit.
+      - if: steps.stale.outputs.modules
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ vars.CI_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
+          permission-contents: write
+      # Commits created through the API are signed by GitHub.
+      - if: steps.stale.outputs.modules
+        shell: bash
+        run: |
+          parent=$(git rev-parse HEAD)
+          base_tree=$(gh api "repos/$REPO/git/commits/$parent" --jq .tree.sha)
+          entries='[]'
+          while read -r path; do
+            blob=$(gh api "repos/$REPO/git/blobs" \
+              -f "content=$(base64 -w0 <"$path")" -f encoding=base64 --jq .sha)
+            entries=$(jq -c --arg path "$path" --arg sha "$blob" \
+              '. + [{path: $path, mode: "100644", type: "blob", sha: $sha}]' <<<"$entries")
+          done < <(git diff --name-only -- go.mod go.sum flake.nix)
+          [ "$entries" != '[]' ] || exit 0
+          tree=$(jq -n --arg base "$base_tree" --argjson tree "$entries" \
+            '{base_tree: $base, tree: $tree}' |
+            gh api "repos/$REPO/git/trees" --input - --jq .sha)
+          commit=$(gh api "repos/$REPO/git/commits" \
+            -f 'message=build(deps): sync go.mod with flake.lock' \
+            -f "tree=$tree" -f "parents[]=$parent" --jq .sha)
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$BRANCH" -f "sha=$commit"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
