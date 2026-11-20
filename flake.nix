@@ -8,7 +8,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     goda-vim = {
-      url = "github:Shougo/goda.vim/v0.8.0";
+      url = "github:Shougo/goda.vim/v0.9.0";
       flake = false;
     };
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

@@ -58,16 +58,16 @@
     "goda-vim": {
       "flake": false,
       "locked": {
-        "lastModified": 1794218155,
-        "narHash": "sha256-D/5gA3liUNuS2PrjVjjFwelNq299Jfdj3K/AfnfbJpc=",
+        "lastModified": 1794540382,
+        "narHash": "sha256-Xbs8XLiiWG9tLuF42jxSob8fw34PEQhZ9QdMCSs+Dsk=",
         "owner": "Shougo",
         "repo": "goda.vim",
-        "rev": "5fe177fa80899e524c0db77f1a31847e4a4656bc",
+        "rev": "3596da14b0539fea957e3eed792a2315ca6b58bd",
         "type": "github"
       },
       "original": {
         "owner": "Shougo",
-        "ref": "v0.8.0",
+        "ref": "v0.9.0",
         "repo": "goda.vim",
         "type": "github"
       }
