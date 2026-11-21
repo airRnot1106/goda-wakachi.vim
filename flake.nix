@@ -42,7 +42,7 @@
           plugin = goda-nix.lib.buildGodaPlugin pkgs {
             inherit version;
             src = ./.;
-            vendorHash = "sha256-paOS1j5gyLy+XzgRLbPyPcem4nlw31Z+Ae7N/YVWkzM=";
+            vendorHash = "sha256-SMDqfYvHqjQ7j0cnx30WTxgCd4UrE1dEo0sJRTFK71g=";
           };
 
           # Only goda.vim and this plugin are loaded, with the motions on the
