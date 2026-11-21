@@ -55,20 +55,23 @@
         "type": "github"
       }
     },
-    "goda-vim": {
-      "flake": false,
+    "goda-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
       "locked": {
-        "lastModified": 1794540382,
-        "narHash": "sha256-Xbs8XLiiWG9tLuF42jxSob8fw34PEQhZ9QdMCSs+Dsk=",
-        "owner": "Shougo",
-        "repo": "goda.vim",
-        "rev": "3596da14b0539fea957e3eed792a2315ca6b58bd",
+        "lastModified": 1795239927,
+        "narHash": "sha256-Ijhf1wye133IpbaMwGuwg9V+tprCpZpRhr+bPyCwPMU=",
+        "owner": "airRnot1106",
+        "repo": "goda.nix",
+        "rev": "18e0bed025fbe3202db6a756b775b039b342c733",
         "type": "github"
       },
       "original": {
-        "owner": "Shougo",
-        "ref": "v0.9.0",
-        "repo": "goda.vim",
+        "owner": "airRnot1106",
+        "repo": "goda.nix",
         "type": "github"
       }
     },
@@ -92,7 +95,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "git-hooks": "git-hooks",
-        "goda-vim": "goda-vim",
+        "goda-nix": "goda-nix",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
       }
