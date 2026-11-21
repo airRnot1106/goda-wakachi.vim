@@ -10,8 +10,12 @@ updates:
       flake-inputs:
         patterns:
           - "*"
-        exclude-patterns:
-          - goda-vim
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
   - package-ecosystem: github-actions
     directory: /
     schedule:
