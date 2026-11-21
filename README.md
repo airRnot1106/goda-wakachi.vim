@@ -4,6 +4,9 @@ Move by bunsetsu (文節) in Japanese text with `w`, `b`, `e`, and `ge` in Vim a
 
 Japanese does not use spaces between words, so Vim's built-in `w` jumps over an entire sequence of kanji or kana. This plugin uses [kagome](https://github.com/ikawaha/kagome), a Go-based morphological analyzer, to break lines into bunsetsu like `私は`, `学校に`, and `行きました。`. It runs on [goda.vim](https://github.com/Shougo/goda.vim).
 
+> [!WARNING]
+> This project is under active development and is not yet stable. The API may change without notice.
+
 ## Features
 
 - Works in both Vim and Neovim
